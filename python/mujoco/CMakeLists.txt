@@ -1,16 +1,16 @@
 # Copyright 2022 DeepMind Technologies Limited
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not
+# use this file except in compliance with the License. You may obtain a copy of
+# the License at
 #
-#     https://www.apache.org/licenses/LICENSE-2.0
+# https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations under
+# the License.
 
 project(mujoco_python)
 cmake_minimum_required(VERSION 3.15)
@@ -40,12 +40,14 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 
 # TODO(stunya) Figure out why this is required.
-separate_arguments(CMDLINE_LINK_OPTIONS UNIX_COMMAND ${CMAKE_SHARED_LINKER_FLAGS})
+separate_arguments(CMDLINE_LINK_OPTIONS UNIX_COMMAND
+                   ${CMAKE_SHARED_LINKER_FLAGS})
 add_link_options(${CMDLINE_LINK_OPTIONS})
 
 if(MSVC)
   add_compile_options(/Gy /Gw /Oi)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES
+                                               "Clang")
   add_compile_options(-fdata-sections -ffunction-sections)
 endif()
 
@@ -70,31 +72,25 @@ include(FindOrFetch)
 
 # ==================== MUJOCO LIBRARY ==========================================
 if(NOT TARGET mujoco)
-  add_library(
-    mujoco
-    SHARED
-    IMPORTED
-    GLOBAL
-  )
+  add_library(mujoco SHARED IMPORTED GLOBAL)
   if(APPLE)
-    # On macOS, check if we are using mujoco.framework first.
-    # Framework headers are searched differently from normal headers.
-    # We need to use -F instead of the usual target_include_directories.
+    # On macOS, check if we are using mujoco.framework first. Framework headers
+    # are searched differently from normal headers. We need to use -F instead of
+    # the usual target_include_directories.
     find_path(MUJOCO_FRAMEWORK mujoco.Framework HINTS ${MUJOCO_FRAMEWORK_DIR})
     if(MUJOCO_FRAMEWORK)
       message("MuJoCo framework is at ${MUJOCO_FRAMEWORK}/mujoco.framework")
       set(MUJOCO_LIBRARY
-          ${MUJOCO_FRAMEWORK}/mujoco.framework/Versions/A/libmujoco.3.0.2.dylib
-      )
+          ${MUJOCO_FRAMEWORK}/mujoco.framework/Versions/A/libmujoco.3.0.2.dylib)
       target_compile_options(mujoco INTERFACE -F${MUJOCO_FRAMEWORK})
     endif()
   endif()
 
   if(NOT MUJOCO_FRAMEWORK)
-    find_library(
-      MUJOCO_LIBRARY mujoco mujoco.3.0.2 HINTS ${MUJOCO_LIBRARY_DIR} REQUIRED
-    )
-    find_path(MUJOCO_INCLUDE mujoco/mujoco.h HINTS ${MUJOCO_INCLUDE_DIR} REQUIRED)
+    find_library(MUJOCO_LIBRARY mujoco mujoco.3.0.2 HINTS ${MUJOCO_LIBRARY_DIR}
+                                                          REQUIRED)
+    find_path(MUJOCO_INCLUDE mujoco/mujoco.h HINTS ${MUJOCO_INCLUDE_DIR}
+                                                   REQUIRED)
     message("MuJoCo is at ${MUJOCO_LIBRARY}")
     message("MuJoCo headers are at ${MUJOCO_INCLUDE}")
     target_include_directories(mujoco INTERFACE "${MUJOCO_INCLUDE}")
@@ -103,7 +99,8 @@ if(NOT TARGET mujoco)
   if(WIN32)
     set_target_properties(mujoco PROPERTIES IMPORTED_IMPLIB "${MUJOCO_LIBRARY}")
   else()
-    set_target_properties(mujoco PROPERTIES IMPORTED_LOCATION "${MUJOCO_LIBRARY}")
+    set_target_properties(mujoco PROPERTIES IMPORTED_LOCATION
+                                            "${MUJOCO_LIBRARY}")
   endif()
 
   if(APPLE)
@@ -112,24 +109,24 @@ if(NOT TARGET mujoco)
       COMMAND head -n 1
       COMMAND xargs dirname
       COMMAND xargs echo -n
-      OUTPUT_VARIABLE MUJOCO_INSTALL_NAME_DIR
-    )
-    set_target_properties(mujoco PROPERTIES INSTALL_NAME_DIR "${MUJOCO_INSTALL_NAME_DIR}")
+      OUTPUT_VARIABLE MUJOCO_INSTALL_NAME_DIR)
+    set_target_properties(mujoco PROPERTIES INSTALL_NAME_DIR
+                                            "${MUJOCO_INSTALL_NAME_DIR}")
   elseif(UNIX)
     execute_process(
       COMMAND objdump -p ${MUJOCO_LIBRARY}
       COMMAND grep SONAME
       COMMAND grep -Po [^\\s]+$
       COMMAND xargs echo -n
-      OUTPUT_VARIABLE MUJOCO_SONAME
-    )
+      OUTPUT_VARIABLE MUJOCO_SONAME)
     set_target_properties(mujoco PROPERTIES IMPORTED_SONAME "${MUJOCO_SONAME}")
   endif()
   add_library(mujoco::mujoco ALIAS mujoco)
 endif()
 
 # ==================== ABSEIL ==================================================
-set(MUJOCO_PYTHON_ABSL_TARGETS absl::core_headers absl::flat_hash_map absl::span)
+set(MUJOCO_PYTHON_ABSL_TARGETS absl::core_headers absl::flat_hash_map
+                               absl::span)
 findorfetch(
   USE_SYSTEM_PACKAGE
   OFF
@@ -143,20 +140,16 @@ findorfetch(
   fb3621f4f897824c0dbe0615fa94543df6192f30 # LTS 20230802.1
   TARGETS
   ${MUJOCO_PYTHON_ABSL_TARGETS}
-  EXCLUDE_FROM_ALL
-)
+  EXCLUDE_FROM_ALL)
 foreach(absl_target IN ITEMS ${MUJOCO_PYTHON_ABSL_TARGETS})
   get_target_property(absl_target_aliased ${absl_target} ALIASED_TARGET)
   if(absl_target_aliased)
     set(absl_target ${absl_target_aliased})
   endif()
   get_target_property(absl_target_type ${absl_target} TYPE)
-  if(NOT
-     ${absl_target_type}
-     STREQUAL
-     "INTERFACE_LIBRARY"
-  )
-    target_compile_options(${absl_target} PRIVATE ${MUJOCO_MACOS_COMPILE_OPTIONS})
+  if(NOT ${absl_target_type} STREQUAL "INTERFACE_LIBRARY")
+    target_compile_options(${absl_target}
+                           PRIVATE ${MUJOCO_MACOS_COMPILE_OPTIONS})
     target_link_options(${absl_target} PRIVATE ${MUJOCO_MACOS_LINK_OPTIONS})
   endif()
 endforeach()
@@ -176,8 +169,7 @@ findorfetch(
   aa6964bf3a34fd607837dd8123bc42465185c4f8
   TARGETS
   Eigen3::Eigen
-  EXCLUDE_FROM_ALL
-)
+  EXCLUDE_FROM_ALL)
 
 # ==================== PYBIND11 ================================================
 findorfetch(
@@ -193,8 +185,7 @@ findorfetch(
   8a099e44b3d5f85b20f05828d919d2332a8de841 # v2.11.1
   TARGETS
   pybind11::pybind11_headers
-  EXCLUDE_FROM_ALL
-)
+  EXCLUDE_FROM_ALL)
 
 # ==================== MUJOCO PYTHON BINDINGS ==================================
 set(SIMULATE_BUILD_EXECUTABLE OFF)
@@ -205,7 +196,8 @@ add_subdirectory(util)
 
 add_library(mujoco_private_api_header INTERFACE)
 target_sources(mujoco_private_api_header INTERFACE private.h)
-set_target_properties(mujoco_private_api_header PROPERTIES PUBLIC_HEADER private.h)
+set_target_properties(mujoco_private_api_header PROPERTIES PUBLIC_HEADER
+                                                           private.h)
 target_link_libraries(mujoco_private_api_header INTERFACE mujoco)
 
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/enum_traits.h)
@@ -214,15 +206,16 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/enum_traits.h)
 else()
   add_custom_command(
     OUTPUT enum_traits.h
-    COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${mujoco_SOURCE_DIR}/mujoco ${Python3_EXECUTABLE}
-            ${CMAKE_CURRENT_SOURCE_DIR}/codegen/generate_enum_traits.py > enum_traits.h
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/codegen/generate_enum_traits.py
-  )
+    COMMAND
+      ${CMAKE_COMMAND} -E env PYTHONPATH=${mujoco_SOURCE_DIR}/mujoco
+      ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/codegen/generate_enum_traits.py >
+      enum_traits.h
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/codegen/generate_enum_traits.py)
   add_library(enum_traits INTERFACE)
   target_sources(enum_traits INTERFACE enum_traits.h)
-  target_include_directories(
-    enum_traits INTERFACE ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
-  )
+  target_include_directories(enum_traits INTERFACE ${CMAKE_CURRENT_BINARY_DIR}
+                                                   ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
 target_link_libraries(enum_traits INTERFACE mujoco absl::core_headers)
 
@@ -232,28 +225,25 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/function_traits.h)
 else()
   add_custom_command(
     OUTPUT function_traits.h
-    COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${mujoco_SOURCE_DIR}/mujoco ${Python3_EXECUTABLE}
-            ${CMAKE_CURRENT_SOURCE_DIR}/codegen/generate_function_traits.py > function_traits.h
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/codegen/generate_function_traits.py
-  )
+    COMMAND
+      ${CMAKE_COMMAND} -E env PYTHONPATH=${mujoco_SOURCE_DIR}/mujoco
+      ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/codegen/generate_function_traits.py >
+      function_traits.h
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/codegen/generate_function_traits.py)
   add_library(function_traits INTERFACE)
   target_sources(function_traits INTERFACE function_traits.h)
   target_include_directories(
-    function_traits INTERFACE ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
-  )
+    function_traits INTERFACE ${CMAKE_CURRENT_BINARY_DIR}
+                              ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
 target_link_libraries(function_traits INTERFACE mujoco absl::core_headers)
 
 add_library(errors_header INTERFACE)
 target_sources(errors_header INTERFACE errors.h)
 set_target_properties(errors_header PROPERTIES PUBLIC_HEADER errors.h)
-target_link_libraries(
-  errors_header
-  INTERFACE crossplatform
-            func_wrap
-            mujoco
-            mujoco_private_api_header
-)
+target_link_libraries(errors_header INTERFACE crossplatform func_wrap mujoco
+                                              mujoco_private_api_header)
 
 add_library(raw INTERFACE)
 target_sources(raw INTERFACE raw.h)
@@ -261,21 +251,10 @@ set_target_properties(raw PROPERTIES PUBLIC_HEADER raw.h)
 target_link_libraries(raw INTERFACE mujoco)
 
 add_library(structs_header INTERFACE)
-target_sources(
-  structs_header
-  INTERFACE indexer_xmacro.h
-            indexers.h
-            structs.h
-)
+target_sources(structs_header INTERFACE indexer_xmacro.h indexers.h structs.h)
 set_target_properties(structs_header PROPERTIES PUBLIC_HEADER structs.h)
-target_link_libraries(
-  structs_header
-  INTERFACE absl::flat_hash_map
-            absl::span
-            crossplatform
-            mujoco
-            raw
-)
+target_link_libraries(structs_header INTERFACE absl::flat_hash_map absl::span
+                                               crossplatform mujoco raw)
 
 add_library(functions_header INTERFACE)
 target_sources(functions_header INTERFACE functions.h)
@@ -288,8 +267,7 @@ target_link_libraries(
             errors_header
             func_wrap
             structs_header
-            tuple_tools
-)
+            tuple_tools)
 
 include(CheckAvxSupport)
 get_avx_compile_options(AVX_COMPILE_OPTIONS)
@@ -299,25 +277,20 @@ macro(mujoco_pybind11_module name)
   target_compile_options(${name} PRIVATE ${AVX_COMPILE_OPTIONS})
   if(NOT MSVC)
     target_compile_options(
-      ${name}
-      PRIVATE -Werror
-              -Wall
-              -Wimplicit-fallthrough
-              -Wunused
-              -Wno-int-in-bool-context
-              -Wno-sign-compare
-    )
+      ${name} PRIVATE -Wall -Wimplicit-fallthrough -Wunused
+                      -Wno-int-in-bool-context -Wno-sign-compare)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
       # Only allow fallthrough annotation via __attribute__.
       target_compile_options(${name} PRIVATE -Wimplicit-fallthrough=5)
 
       # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=109561
-      if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 11)
+      if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 11)
         target_compile_options(${name} PRIVATE -Wno-maybe-uninitialized)
       endif()
     endif()
   endif()
-  set_target_properties(${name} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  set_target_properties(${name} PROPERTIES LIBRARY_OUTPUT_DIRECTORY
+                                           ${CMAKE_CURRENT_BINARY_DIR})
   if(APPLE)
     add_custom_command(
       TARGET ${name}
@@ -325,46 +298,31 @@ macro(mujoco_pybind11_module name)
       COMMAND
         install_name_tool -change
         $<TARGET_PROPERTY:mujoco,INSTALL_NAME_DIR>/$<TARGET_FILE_NAME:mujoco>
-        @rpath/$<TARGET_FILE_NAME:mujoco> -add_rpath @loader_path $<TARGET_FILE:${name}>
-    )
+        @rpath/$<TARGET_FILE_NAME:mujoco> -add_rpath @loader_path
+        $<TARGET_FILE:${name}>)
   elseif(NOT WIN32)
-    set_target_properties(${name} PROPERTIES INSTALL_RPATH $ORIGIN BUILD_WITH_INSTALL_RPATH TRUE)
+    set_target_properties(${name} PROPERTIES INSTALL_RPATH $ORIGIN
+                                             BUILD_WITH_INSTALL_RPATH TRUE)
   endif()
 endmacro()
 
 mujoco_pybind11_module(_callbacks callbacks.cc)
-target_link_libraries(
-  _callbacks
-  PRIVATE errors_header
-          mujoco
-          raw
-          structs_header
-)
+target_link_libraries(_callbacks PRIVATE errors_header mujoco raw
+                                         structs_header)
 
 mujoco_pybind11_module(_constants constants.cc)
 target_link_libraries(_constants PRIVATE mujoco)
 
 mujoco_pybind11_module(_enums enums.cc)
-target_link_libraries(
-  _enums
-  PRIVATE crossplatform
-          enum_traits
-          mujoco
-          tuple_tools
-)
+target_link_libraries(_enums PRIVATE crossplatform enum_traits mujoco
+                                     tuple_tools)
 
 mujoco_pybind11_module(_errors errors.cc)
 target_link_libraries(_errors PRIVATE errors_header)
 
 mujoco_pybind11_module(_functions functions.cc)
-target_link_libraries(
-  _functions
-  PRIVATE Eigen3::Eigen
-          functions_header
-          function_traits
-          mujoco
-          raw
-)
+target_link_libraries(_functions PRIVATE Eigen3::Eigen functions_header
+                                         function_traits mujoco raw)
 if(APPLE)
   # C++17 aligned allocation is not available until macOS 10.14.
   target_compile_options(_functions PRIVATE -fno-aligned-allocation)
@@ -379,18 +337,12 @@ target_link_libraries(
           function_traits
           mujoco
           raw
-          structs_header
-)
+          structs_header)
 
 mujoco_pybind11_module(_rollout rollout.cc)
 target_link_libraries(_rollout PRIVATE functions_header mujoco raw)
 
-mujoco_pybind11_module(
-  _structs
-  indexers.cc
-  serialization.h
-  structs.cc
-)
+mujoco_pybind11_module(_structs indexers.cc serialization.h structs.cc)
 target_link_libraries(
   _structs
   PRIVATE absl::flat_hash_map
@@ -401,18 +353,11 @@ target_link_libraries(
           errors_header
           func_wrap
           function_traits
-          structs_header
-)
+          structs_header)
 
 mujoco_pybind11_module(_simulate simulate.cc)
-target_link_libraries(
-  _simulate
-  PRIVATE mujoco
-          mujoco::libsimulate
-          errors_header
-          raw
-          structs_header
-)
+target_link_libraries(_simulate PRIVATE mujoco mujoco::libsimulate
+                                        errors_header raw structs_header)
 
 set(LIBRARIES_FOR_WHEEL
     "$<TARGET_FILE:_callbacks>"
@@ -424,8 +369,7 @@ set(LIBRARIES_FOR_WHEEL
     "$<TARGET_FILE:_rollout>"
     "$<TARGET_FILE:_simulate>"
     "$<TARGET_FILE:_structs>"
-    "$<TARGET_FILE:mujoco>"
-)
+    "$<TARGET_FILE:mujoco>")
 
 if(APPLE)
   add_executable(mjpython mjpython/mjpython.mm)
@@ -438,15 +382,16 @@ if(MUJOCO_PYTHON_MAKE_WHEEL)
   add_custom_target(
     wheel ALL
     COMMAND "${CMAKE_COMMAND}" -E rm -rf "${CMAKE_CURRENT_BINARY_DIR}/dist"
-    COMMAND "${CMAKE_COMMAND}" -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/.."
-            "${CMAKE_CURRENT_BINARY_DIR}/dist"
-    COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_CURRENT_SOURCE_DIR}/../../LICENSE"
-            "${CMAKE_CURRENT_BINARY_DIR}/dist/LICENSE"
+    COMMAND "${CMAKE_COMMAND}" -E copy_directory
+            "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_BINARY_DIR}/dist"
+    COMMAND
+      "${CMAKE_COMMAND}" -E copy "${CMAKE_CURRENT_SOURCE_DIR}/../../LICENSE"
+      "${CMAKE_CURRENT_BINARY_DIR}/dist/LICENSE"
     COMMAND "${CMAKE_COMMAND}" -E copy ${LIBRARIES_FOR_WHEEL}
             "${CMAKE_CURRENT_BINARY_DIR}/dist/mujoco"
-    COMMAND "${Python3_EXECUTABLE}" -m pip wheel --wheel-dir "${CMAKE_BINARY_DIR}" --no-deps -vvv
-            "${CMAKE_CURRENT_BINARY_DIR}/dist"
-  )
+    COMMAND
+      "${Python3_EXECUTABLE}" -m pip wheel --wheel-dir "${CMAKE_BINARY_DIR}"
+      --no-deps -vvv "${CMAKE_CURRENT_BINARY_DIR}/dist")
 
   add_dependencies(
     wheel
@@ -459,8 +404,7 @@ if(MUJOCO_PYTHON_MAKE_WHEEL)
     _rollout
     _simulate
     _structs
-    mujoco
-  )
+    mujoco)
   if(APPLE)
     add_dependencies(wheel mjpython)
   endif()
